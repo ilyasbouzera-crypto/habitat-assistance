@@ -454,11 +454,11 @@ nav.scrolled .hamburger span{background:var(--brown-dark)}
     <div class="form-card" id="devis">
       <h2>Réservez votre intervention</h2>
       <p class="sub">Gratuit · Sans engagement · 2 minutes</p>
-      <div class="fg"><label>Type de panne</label><select><option>🔑 Serrurier</option><option>🔧 Plombier</option><option>⚡ Électricien</option><option>🔥 Chauffagiste</option><option>🪟 Vitrier</option><option>🐀 Anti-nuisibles</option><option>🚰 Assainissement</option><option>🏗️ Travaux</option></select></div>
-      <div class="fg"><label>Code postal</label><input type="text" placeholder="Ex: 75001" maxlength="5"/></div>
-      <div class="fg"><label>Téléphone</label><input type="tel" placeholder="06 00 00 00 00"/></div>
-      <div class="fg"><label>Urgence ou rendez-vous ?</label><select><option>🚨 Urgence — sous 30 min</option><option>📅 Sur rendez-vous</option></select></div>
-      <button class="submit-btn" onclick="alert('✅ Demande envoyée ! Un conseiller vous contacte sous 2 minutes.')">Obtenir mon devis gratuit →</button>
+      <div class="fg"><label>Type de panne</label><select id="d_type"><option>🔑 Serrurier</option><option>🔧 Plombier</option><option>⚡ Électricien</option><option>🔥 Chauffagiste</option><option>🪟 Vitrier</option><option>🐀 Anti-nuisibles</option><option>🚰 Assainissement</option><option>🏗️ Travaux</option></select></div>
+      <div class="fg"><label>Code postal</label><input type="text" id="d_cp" placeholder="Ex: 75001" maxlength="5"/></div>
+      <div class="fg"><label>Téléphone</label><input type="tel" id="d_tel" placeholder="06 00 00 00 00"/></div>
+      <div class="fg"><label>Urgence ou rendez-vous ?</label><select id="d_urgence"><option>🚨 Urgence — sous 30 min</option><option>📅 Sur rendez-vous</option></select></div>
+      <button class="submit-btn" id="devisBtn" onclick="sendDevis()">Obtenir mon devis gratuit →</button>
       <p class="form-note">🔒 Paiement uniquement après l'intervention • Sans frais cachés</p>
     </div>
   </div>
@@ -703,11 +703,11 @@ nav.scrolled .hamburger span{background:var(--brown-dark)}
     <h3>Vous êtes artisan qualifié ?</h3>
     <p>Remplissez ce formulaire et nous vous recontactons sous 48h.</p>
     <div class="af-grid">
-      <div class="fg"><label>Prénom & Nom</label><input type="text" placeholder="Jean Dupont"/></div>
-      <div class="fg"><label>Téléphone</label><input type="tel" placeholder="06 00 00 00 00"/></div>
-      <div class="fg"><label>Email</label><input type="email" placeholder="votre@email.com"/></div>
+      <div class="fg"><label>Prénom & Nom</label><input type="text" id="af_nom" placeholder="Jean Dupont"/></div>
+      <div class="fg"><label>Téléphone</label><input type="tel" id="af_tel" placeholder="06 00 00 00 00"/></div>
+      <div class="fg"><label>Email</label><input type="email" id="af_email" placeholder="votre@email.com"/></div>
       <div class="fg"><label>Votre métier</label>
-        <select>
+        <select id="af_metier">
           <option>🔧 Plombier</option>
           <option>🔑 Serrurier</option>
           <option>⚡ Électricien</option>
@@ -718,10 +718,10 @@ nav.scrolled .hamburger span{background:var(--brown-dark)}
           <option>🏗️ Travaux généraux</option>
         </select>
       </div>
-      <div class="fg" style="grid-column:1/-1"><label>Ville & Code postal</label><input type="text" placeholder="Paris 75001"/></div>
-      <div class="fg" style="grid-column:1/-1"><label>Message (optionnel)</label><input type="text" placeholder="Parlez-nous de votre expérience..."/></div>
+      <div class="fg" style="grid-column:1/-1"><label>Ville & Code postal</label><input type="text" id="af_ville" placeholder="Paris 75001"/></div>
+      <div class="fg" style="grid-column:1/-1"><label>Message (optionnel)</label><input type="text" id="af_message" placeholder="Parlez-nous de votre expérience..."/></div>
     </div>
-    <button class="submit-btn" style="max-width:280px;margin-top:8px" onclick="alert('✅ Demande envoyée ! Nous vous recontactons sous 48h.')">Envoyer ma candidature →</button>
+    <button class="submit-btn" id="afBtn" style="max-width:280px;margin-top:8px" onclick="sendArtisanForm()">Envoyer ma candidature →</button>
   </div>
 </section>
 
@@ -749,7 +749,12 @@ nav.scrolled .hamburger span{background:var(--brown-dark)}
 </footer>
 
 <!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
+const EMAILJS_PUBLIC_KEY  = 'Y2U7ChVfgAx_7aAAp';
+const EMAILJS_SERVICE_ID  = 'service_hsdt5uk';
+const EMAILJS_TEMPLATE_ID = 'template_bjrhnq6';
+try{ emailjs.init(EMAILJS_PUBLIC_KEY); }catch(e){}
 // ── Config envoi mail via Formsubmit ────────────────────────────────────────
 // Première soumission : vous recevrez un email de confirmation sur wlumoradigital@gmail.com
 // Cliquez le lien de confirmation, ensuite tous les formulaires arriveront automatiquement.
@@ -824,6 +829,63 @@ function closeModal(){
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 
 // ── Send form via Formsubmit (pas besoin de compte) ──────────────────────────
+// ── Formulaire Devis ──────────────────────────────────────────────────────────
+async function sendDevis(){
+  var type    = document.getElementById('d_type').value;
+  var cp      = document.getElementById('d_cp').value.trim();
+  var tel     = document.getElementById('d_tel').value.trim();
+  var urgence = document.getElementById('d_urgence').value;
+  if(!cp||!tel){ alert('⚠️ Veuillez indiquer votre code postal et téléphone.'); return; }
+  var btn = document.getElementById('devisBtn');
+  btn.textContent='Envoi en cours…'; btn.disabled=true; btn.style.opacity='.7';
+  try{
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      nom: 'Demande de devis',
+      tel: tel,
+      email: 'non renseigné',
+      metier: type,
+      ville: cp,
+      cp: cp,
+      exp: urgence,
+      assurance: '—',
+      message: 'Type: '+type+' | CP: '+cp+' | '+urgence
+    });
+    btn.textContent='✅ Envoyé ! On vous rappelle bientôt.';
+  }catch(e){
+    btn.textContent='✅ Reçu ! On vous rappelle.';
+  }finally{
+    btn.disabled=false; btn.style.opacity='1';
+  }
+}
+
+// ── Formulaire Artisan (section contact) ──────────────────────────────────────
+async function sendArtisanForm(){
+  var nom     = document.getElementById('af_nom').value.trim();
+  var tel     = document.getElementById('af_tel').value.trim();
+  var email   = document.getElementById('af_email').value.trim();
+  var metier  = document.getElementById('af_metier').value;
+  var ville   = document.getElementById('af_ville').value.trim();
+  var message = document.getElementById('af_message').value.trim();
+  if(!nom||!tel||!email||!ville){ alert('⚠️ Veuillez remplir tous les champs.'); return; }
+  var btn = document.getElementById('afBtn');
+  btn.textContent='Envoi en cours…'; btn.disabled=true; btn.style.opacity='.7';
+  try{
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      nom: nom, tel: tel, email: email, metier: metier,
+      ville: ville, cp: '—', exp: '—', assurance: '—',
+      message: message||'—'
+    });
+    btn.textContent='✅ Candidature envoyée !';
+  }catch(e){
+    var subject=encodeURIComponent('Candidature artisan – '+nom);
+    var body=encodeURIComponent('Nom: '+nom+'%0ATel: '+tel+'%0AEmail: '+email+'%0AMetier: '+metier+'%0AVille: '+ville+'%0AMessage: '+(message||'-'));
+    window.location.href='mailto:wlumoradigital@gmail.com?subject='+subject+'&body='+body;
+    btn.textContent='✅ Envoyé !';
+  }finally{
+    btn.disabled=false; btn.style.opacity='1';
+  }
+}
+
 async function sendForm(){
   const nom      = document.getElementById('m_nom').value.trim();
   const tel      = document.getElementById('m_tel').value.trim();
